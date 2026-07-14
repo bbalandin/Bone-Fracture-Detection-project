@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+
+# Модель (не коммитим веса!)
+*.pt
+*.onnx
+*.pth
+model.pt
+yolo11*.pt
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+.DS_Store
+
+# Логи
+*.log
+/tmp/
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Тесты
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
