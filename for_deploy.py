@@ -36,7 +36,7 @@ def inject_custom_css():
 
 
 def navigation_menu():
-    image = Image.open("data\\Пример.jpg")  # для примера
+    image = Image.open("data/Пример.jpg")  # для примера
 
     st.set_page_config(
         layout="wide",
@@ -325,8 +325,8 @@ def show_examples_page():
     # BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     dir_gt = f"{type_of_fracture}_gt"
     dir_pred = f"{type_of_fracture}_pred"
-    DIR_EXAMPLES_GT = f"data\Examples\{dir_gt}"
-    DIR_EXAMPLES_PRED = f"data\Examples\{dir_pred}"
+    DIR_EXAMPLES_GT = f"data/Examples/{dir_gt}"
+    DIR_EXAMPLES_PRED = f"data/Examples/{dir_pred}"
     col1, col2 = st.columns(2)
     for i, file in enumerate(os.listdir(DIR_EXAMPLES_GT)):
         # image_gt = Image.open(os.path.join(DIR_EXAMPLES_GT, file))
