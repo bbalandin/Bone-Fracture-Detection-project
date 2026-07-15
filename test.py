@@ -1,9 +1,7 @@
 import streamlit as st
 from PIL import Image
 import io
-import base64
 import numpy as np
-import cv2
 import os
 import sys
 
@@ -40,22 +38,24 @@ def inject_custom_css():
 
 def process_image_directly(uploaded_file):
     """
-    Прямая обработка изображения (вместо HTTP-запроса к FastAPI)
+    Прямая обработка изображения через PIL (без cv2)
     """
-    # Конвертируем в numpy array
+    # 1. Получаем байты файла
     file_bytes = uploaded_file.getvalue()
-    image_array = np.frombuffer(file_bytes, np.uint8)
-    image = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
     
-    # Применяем CLAHE
-    clahe_image = apply_clahe_lab(image)
+    # 2. Открываем через PIL (вместо cv2.imdecode)
+    pil_image = Image.open(io.BytesIO(file_bytes)).convert("RGB")
     
-    # Детектируем переломы
-    detected_image, fractures = detect_fracture(clahe_image)
+    # 3. Конвертируем RGB → BGR (так как backend ожидает формат OpenCV)
+    image_bgr = np.array(pil_image)[:, :, ::-1]
     
-    # Конвертируем результат обратно в изображение
-    success, buffer = cv2.imencode(".jpg", detected_image)
-    result_image = Image.open(io.BytesIO(buffer.tobytes()))
+    # 4. Применяем CLAHE и детектируем
+    clahe_image = apply_clahe_lab(image_bgr)
+    detected_image_bgr, fractures = detect_fracture(clahe_image)
+    
+    # 5. Конвертируем результат BGR → RGB для отображения (вместо cv2.imencode)
+    detected_image_rgb = detected_image_bgr[:, :, ::-1]
+    result_image = Image.fromarray(detected_image_rgb)
     
     return result_image, fractures
 
@@ -78,7 +78,6 @@ def uploading_detecting():
 
         if st.button("Запустить анализ", use_container_width=True):
             with st.spinner("Анализ снимка..."):
-                # Прямой вызов функции вместо requests.post
                 result_image, fractures = process_image_directly(uploaded_file)
             
             with col2:
@@ -115,13 +114,13 @@ def navigation_menu():
     try:
         image = Image.open("data/Пример.jpg")
     except:
-        image = None
+        image = "🦴"
 
     st.set_page_config(
         layout="wide",
         initial_sidebar_state="auto",
         page_title="Bone Fracture Detection",
-        page_icon=image if image else "🦴",
+        page_icon=image if image != "🦴" else "🦴",
     )
     
     inject_custom_css()
