@@ -20,18 +20,13 @@ def apply_clahe_lab(image, clip_limit=3.0, tile_grid_size=(8, 8)):
     return img_clahe
 
 
-def detect_fracture(image, is_obb=True):  # добавить для obb
-    model_type = 'Fast'
+def detect_fracture(image, model_type, is_obb=True):  # добавить для obb
     # TODO вынести все пути в константы
-    MODEL_TYPE_FILE = "..\\model_type.txt"
     # MODEL_TYPE_FILE = os.path.normpath(MODEL_TYPE_FILE)
-
-    with open(MODEL_TYPE_FILE, 'r', encoding='utf-8') as file:
-        model_type = file.read()
     if model_type == "точная":
-        MODEL_PATH = "..//data//best (4).pt" # TODO заменить модель
+        MODEL_PATH = "../data/best (4).pt"  # TODO заменить модель
     else:
-        MODEL_PATH = "..//data//best (5).pt" # TODO заменить модель
+        MODEL_PATH = "../data/best (5).pt"  # TODO заменить модель
     model = YOLO(MODEL_PATH)
     bbox_color = (204, 204, 0)  # цвет нашего bounding box'
     # инференс на данном изображении
