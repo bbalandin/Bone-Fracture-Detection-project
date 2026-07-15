@@ -3,9 +3,6 @@ import streamlit as st
 from PIL import Image
 import requests
 import io
-import base64
-from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
-import time
 import numpy as np
 import os
 
