@@ -1,160 +1,177 @@
-import pandas as pd
 import streamlit as st
 from PIL import Image
-import requests
 import io
 import base64
-from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
-import time
-# from model import open_data, preprocess_data, split_data, load_model_and_predict
+import numpy as np
+import cv2
+import os
+import sys
+
+# Импортируем функции из backend
+from backend.model import apply_clahe_lab, detect_fracture
+
+fracture_classes = ['elbow positive', 'fingers positive', 'forearm fracture', 
+                    'humerus fracture', 'humerus', 'shoulder fracture', 'wrist positive']
 
 
-# TODO передалать структуру
-PATH_TO_MODEL = "data\\best (4).pt"
+def load_css(file_path):
+    """Загрузка CSS из файла"""
+    if os.path.exists(file_path):
+        with open(file_path, 'r', encoding='utf-8') as f:
+            return f.read()
+    return ""
 
-fracture_classes = ['elbow positive', 'fingers positive', 'forearm fracture', 'humerus fracture', 'humerus', 'shoulder fracture', 'wrist positive']
+
+def inject_custom_css():
+    """Внедрение CSS"""
+    css_files = [
+        'frontend/styles/main.css',
+        'frontend/styles/sidebar.css',
+        'frontend/styles/components.css'
+    ]
+    
+    css_combined = ""
+    for css_file in css_files:
+        css_combined += load_css(css_file) + "\n"
+    
+    if css_combined.strip():
+        st.markdown(f"<style>{css_combined}</style>", unsafe_allow_html=True)
+
+
+def process_image_directly(uploaded_file):
+    """
+    Прямая обработка изображения (вместо HTTP-запроса к FastAPI)
+    """
+    # Конвертируем в numpy array
+    file_bytes = uploaded_file.getvalue()
+    image_array = np.frombuffer(file_bytes, np.uint8)
+    image = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
+    
+    # Применяем CLAHE
+    clahe_image = apply_clahe_lab(image)
+    
+    # Детектируем переломы
+    detected_image, fractures = detect_fracture(clahe_image)
+    
+    # Конвертируем результат обратно в изображение
+    success, buffer = cv2.imencode(".jpg", detected_image)
+    result_image = Image.open(io.BytesIO(buffer.tobytes()))
+    
+    return result_image, fractures
+
+
+def uploading_detecting():
+    st.markdown("### Загрузка рентгеновского снимка")
+
+    uploaded_file = st.file_uploader(
+        "Перетащите файл сюда или нажмите для выбора",
+        type=["jpg", "jpeg", "png"],
+        help="Поддерживаемые форматы: JPG, JPEG, PNG • Макс. размер: 200MB"
+    )
+
+    if uploaded_file is not None:
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("#### Оригинал")
+            st.image(uploaded_file, caption="Загруженный снимок", use_container_width=True)
+
+        if st.button("Запустить анализ", use_container_width=True):
+            with st.spinner("Анализ снимка..."):
+                # Прямой вызов функции вместо requests.post
+                result_image, fractures = process_image_directly(uploaded_file)
+            
+            with col2:
+                st.markdown("#### Результат детекции")
+                st.image(result_image, caption="С обнаруженными переломами", use_container_width=True)
+
+            if not fractures:
+                st.success("Поздравляем! На Вашем снимке нет перелома!")
+            else:
+                st.warning(f"Обнаружено переломов: {len(fractures)}")
+                st.markdown("### Детальная информация")
+
+                for i, fracture in enumerate(fractures):
+                    confidence = fracture[0]
+                    class_name = fracture_classes[int(fracture[1])]
+
+                    st.markdown(f"""
+                    <div class='fracture-result'>
+                        <div style='display: flex; justify-content: space-between; align-items: center;'>
+                            <div>
+                                <strong style='color: #14b8a6; font-size: 16px;'>Перелом #{i + 1}</strong><br>
+                                <span style='color: #94a3b8; font-size: 14px;'>Класс: {class_name}</span>
+                            </div>
+                            <div style='text-align: right;'>
+                                <div style='color: #fbbf24; font-size: 20px; font-weight: 700;'>{confidence:.1%}</div>
+                                <div style='color: #64748b; font-size: 12px;'>Уверенность</div>
+                            </div>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+
 
 def navigation_menu():
-    image = Image.open('data/Пример.jpg')  # для примера
+    try:
+        image = Image.open("data/Пример.jpg")
+    except:
+        image = None
 
     st.set_page_config(
         layout="wide",
         initial_sidebar_state="auto",
         page_title="Bone Fracture Detection",
-        page_icon=image,
+        page_icon=image if image else "🦴",
     )
+    
+    inject_custom_css()
 
     if 'current_page' not in st.session_state:
         st.session_state.current_page = 'Главная'
 
     with st.sidebar:
-        st.title("Навигация")
-        if st.button("🏠 Главная"):
-            st.session_state.current_page = 'Главная'
-        if st.button("📋 Подробная информация"):
-            st.session_state.current_page = 'Подробная информация'
-        if st.button("🖼️ Примеры переломов"):
-            st.session_state.current_page = 'Примеры переломов'
+        st.markdown("""
+        <div style='text-align: center; padding: 20px 0;'>
+            <h2 style='color: #14b8a6; margin: 0;'>Fracture Detection</h2>
+            <p style='color: #64748b; font-size: 12px; margin-top: 8px;'>X-Ray Analysis</p>
+        </div>
+        """, unsafe_allow_html=True)
 
+        st.markdown("---")
+        st.markdown("### Навигация")
 
-    # Отображение контента в зависимости от выбранной страницы
-    if st.session_state.current_page == 'Главная':
-        show_main_page()
-    elif st.session_state.current_page == 'Подробная информация':
-        show_info_page()
-    elif st.session_state.current_page == 'Примеры переломов':
-        show_examples_page()
-
-
-def uploading_detecting():
-    uploaded_file = st.file_uploader("Выберите картинку...", type=["jpg", "jpeg", "png"])
-    if uploaded_file is not None:
-        # Показываем оригинал
-        col1, col2 = st.columns(2)
+        col1, col2, col3 = st.columns(3)
         with col1:
-            st.image(uploaded_file, caption="Оригинал", use_container_width=True)
+            if st.button("Главная"):
+                st.session_state.current_page = 'Главная'
+        with col2:
+            if st.button("Информация"):
+                st.session_state.current_page = 'Информация'
+        with col3:
+            if st.button("Примеры"):
+                st.session_state.current_page = 'Примеры'
 
-        if st.button("Обработать"):
-            # Отправляем файл в FastAPI
-            files = {"file": (uploaded_file.name, uploaded_file.getvalue(), uploaded_file.type)}
-            progress_bar = st.progress(0)
-            status_text = st.empty()
-            response = requests.post("http://localhost:8000/uploadfile/", files=files)
-
-            def create_monitor(encoder):
-                def callback(monitor):
-                    progress = (monitor.bytes_read / monitor.len) * 100
-                    progress_bar.progress(progress / 100)
-                    status_text.text(f"Загрузка: {progress:.1f}%")
-                return callback # исправить
-            files = {"file": (uploaded_file.name, uploaded_file.getvalue(), uploaded_file.type)}
-            encoder = MultipartEncoder(fields=files)
-            monitor = MultipartEncoderMonitor(encoder, create_monitor(encoder))
-            response = requests.post(
-                "http://localhost:8000/uploadfile/",
-                data=monitor,
-                headers={"Content-Type": monitor.content_type}
-            )   # TODO добавить выбор модели
-            data_response = response.json()
-            if response.status_code == 200:
-                # Читаем байты ответа как изображение
-                img_bytes = base64.b64decode(data_response['image'])
-                result_image = Image.open(io.BytesIO(img_bytes))
-                with col2:
-                    st.image(result_image, caption="После обработки", use_container_width=True)
-                fractures = data_response['fractures']
-                if not fractures:
-                    st.success("Поздравляем! На Вашем снимке нет перелома!")
-                else:
-                    st.warning("Наша модель считает, что на Вашем снимке есть переломы, вот более подробная информация")
-                    for i, fracture in enumerate(fractures):
-                        print(i, fracture)
-                        st.markdown(f"#### Вероятность наличия перелома №{i + 1} -"
-                                    f"{fracture[0]:.2f}, это перелом класса {fracture_classes[int(fracture[1])]}")
-            else:
-                st.error(f"Ошибка: {response.status_code} — {response.text}")
-        # Проверяем успешность ответа
-        # if response.status_code != 200:
-        #     st.error("Ошибка при обработке изображения на сервере.")
-        #     result = response.json()
-        #     st.success(result["message"])
-        #     st.json(result)
-        # else:
-
-
-def show_main_page():
-    st.write(
-        """
-        # Детекция переломов
-        Загрузите сюда любой свой рентген снимок и проверьте, есть ли на нём переломы,
-        наша модель обучена так, чтобы замечать даже незаметные на первый взгляд трещины.
-        После загрузки ваша рентген будет преобразован при помоши CLAHE, чтобы модель могла
-        лучше различать все детали, заитригованы, попробуйте!
-        """
-    )
-    genre = st.radio(
-        "Выберите модель",
-        ["***Быстрая модель***", "***Медленная модель***"]
-    )
-    if genre == "***Быстрая модель***":
-        st.write("Отличный выбор, но у быстрой модель ниже точность")
-    else:
-
-        st.write("Прекрасный выбор, модель медленная, но у неё высокая точность")
-    uploading_detecting()
-    # st.image(image)
-    # st.success("Фотография успешно обработана")
-
-
-def show_info_page():
-    st.write("# Подробная информация")
-    response = requests.get("http://localhost:8000/info")
-    if response.status_code == 200:
-        data = response.json()
-    else:
-        st.write("Произошла ошибка")
-
-
-def show_examples_page():
-    st.write("Примеры детектированных переломов")
-    response = requests.get("http://localhost:8000/fracture_examples")
-    if response.status_code == 200:
-        data = response.json()
-    else:
-        st.write("Произошла ошибка")
-
-
-def write_user_data(df):
-    st.write("## Ваши данные")
-    st.write(df)
+    if st.session_state.current_page == 'Главная':
+        st.markdown("""
+        <div class='medical-header'>
+            <h1>Детекция переломов</h1>
+            <p style='color: #94a3b8; font-size: 16px; margin-top: 12px;'>
+                Система для анализа рентгеновских снимков на основе YOLO
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        uploading_detecting()
+        
+    elif st.session_state.current_page == 'Информация':
+        st.markdown("### О модели")
+        st.info("Модель: YOLO11 с CLAHE предобработкой")
+        st.write(f"Классы детекции: {len(fracture_classes)}")
+        
+    elif st.session_state.current_page == 'Примеры':
+        st.markdown("### Примеры переломов")
+        st.info("Здесь будут примеры")
 
 
 if __name__ == "__main__":
-    hide_menu_style = """
-    <style>
-    #MainMenu {visibility: hidden;}
-    footer {visibily: hidden;}
-    </style>
-    """  # убираем встроенное меню streamlit
-    st.markdown(hide_menu_style, unsafe_allow_html=True)
     navigation_menu()
