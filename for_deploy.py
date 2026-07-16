@@ -10,7 +10,7 @@ import os
 # TODO отделить текст markdown от основного кода
 from backend.model import apply_clahe_lab, detect_fracture
 
-fracture_classes = ['elbow positive', 'fingers positive', 'forearm fracture', 'humerus fracture', 'humerus', 'shoulder fracture', 'wrist positive']
+fracture_classes = ['elbow positive', 'fingers positive', 'forearm fracture', 'humerus', 'shoulder fracture']
 MODEL_TYPE = 'быстрая'
 
 
