@@ -4,8 +4,10 @@
 # import pandas as pd
 import cv2
 import numpy as np
+import gdown
 import os
 import shutil
+import streamlit as st
 from ultralytics import YOLO
 
 
@@ -20,14 +22,35 @@ def apply_clahe_lab(image, clip_limit=3.0, tile_grid_size=(8, 8)):
     return img_clahe
 
 
+def load_model(model_type):
+    # TODO вынести в константы
+    MODEL_CACHE_DIR = "models"
+    FILE_ID_ACCURATE = "12eOar13U92TJjyimcVoPopD9t5489hJ9"
+    FILE_ID_FAST = "17vfM5k38wNlo3vFdkF1FMccdXtzAV8e-"
+    os.makedirs(MODEL_CACHE_DIR, exist_ok=True)
+    if model_type == "точная":
+        model_path = os.path.join(MODEL_CACHE_DIR, "accurate.pt")
+        file_id = FILE_ID_ACCURATE
+        # путь к точной модели на google drive
+    else:
+        model_path = os.path.join(MODEL_CACHE_DIR, "fast.pt")
+        file_id = FILE_ID_FAST
+        # путь к быстрой модели на google drive
+    if not os.path.exists(model_path):
+        st.info(f"В данный момент модель скачивается, это займёт некоторое время")
+        download_url = f"https://drive.google.com/uc?id={file_id}"
+        gdown.download(download_url, model_path, quiet=False)
+        st.success(f"Модель скачана!")
+    else:
+        st.success(f"Модель скачана!")
+    return YOLO(model_path)
+    # TODO сделать скачивание модели из google диска
+
+
 def detect_fracture(image, model_type, is_obb=True):  # добавить для obb
     # TODO вынести все пути в константы
     # MODEL_TYPE_FILE = os.path.normpath(MODEL_TYPE_FILE)
-    if model_type == "точная":
-        MODEL_PATH = "../data/best (4).pt"  # TODO заменить модель
-    else:
-        MODEL_PATH = "../data/best (5).pt"  # TODO заменить модель
-    model = YOLO(MODEL_PATH)
+    model = load_model(model_type)
     bbox_color = (204, 204, 0)  # цвет нашего bounding box'
     # инференс на данном изображении
     results = model(image, conf=0.5, iou=0.4)  # list of Results objects
@@ -55,88 +78,3 @@ def detect_fracture(image, model_type, is_obb=True):  # добавить для 
                     cv2.polylines(image, [points], isClosed=True,
                                   color=bbox_color, thickness=2)
     return image, fractures
-
-# def using_sahi(image):
-    # in progress
-# def split_data(df: pd.DataFrame):
-#     y = df['Survived']
-#     X = df[["Pclass", "Sex", "Age", "SibSp", "Parch", "Embarked"]]
-
-#     return X, y
-
-
-# def open_data(path="data/titanic_dataset_train.csv"):
-#     df = pd.read_csv(path)
-#     df = df[['Survived', "Pclass", "Sex", "Age", "SibSp", "Parch", "Embarked"]]
-
-#     return df
-
-
-# def preprocess_data(df: pd.DataFrame, test=True):
-#     df.dropna(inplace=True)
-
-#     if test:
-#         X_df, y_df = split_data(df)
-#     else:
-#         X_df = df
-
-#     to_encode = ['Sex', 'Embarked']
-#     for col in to_encode:
-#         dummy = pd.get_dummies(X_df[col], prefix=col)
-#         X_df = pd.concat([X_df, dummy], axis=1)
-#         X_df.drop(col, axis=1, inplace=True)
-
-#     if test:
-#         return X_df, y_df
-#     else:
-#         return X_df
-
-
-# def fit_and_save_model(X_df, y_df, path="data/model_weights.mw"):
-#     model = RandomForestClassifier()
-#     model.fit(X_df, y_df)
-
-#     test_prediction = model.predict(X_df)
-#     accuracy = accuracy_score(test_prediction, y_df)
-#     print(f"Model accuracy is {accuracy}")
-
-#     with open(path, "wb") as file:
-#         dump(model, file)
-
-#     print(f"Model was saved to {path}")
-
-
-# def load_model_and_predict(df, path="data/model_weights.mw"):
-#     with open(path, "rb") as file:
-#         model = load(file)
-
-#     prediction = model.predict(df)[0]
-#     # prediction = np.squeeze(prediction)
-
-#     prediction_proba = model.predict_proba(df)[0]
-#     # prediction_proba = np.squeeze(prediction_proba)
-
-#     encode_prediction_proba = {
-#         0: "Вам не повезло с вероятностью",
-#         1: "Вы выживете с вероятностью"
-#     }
-
-#     encode_prediction = {
-#         0: "Сожалеем, вам не повезло",
-#         1: "Ура! Вы будете жить"
-#     }
-
-#     prediction_data = {}
-#     for key, value in encode_prediction_proba.items():
-#         prediction_data.update({value: prediction_proba[key]})
-
-#     prediction_df = pd.DataFrame(prediction_data, index=[0])
-#     prediction = encode_prediction[prediction]
-
-#     return prediction, prediction_df
-
-
-# if __name__ == "__main__":
-#     df = open_data()
-#     X_df, y_df = preprocess_data(df)
-#     fit_and_save_model(X_df, y_df)
