@@ -1,7 +1,3 @@
-# from sklearn.ensemble import RandomForestClassifier
-# from sklearn.metrics import accuracy_score
-# from pickle import dump, load
-# import pandas as pd
 import cv2
 import numpy as np
 import gdown
@@ -9,6 +5,13 @@ import os
 import shutil
 import streamlit as st
 from ultralytics import YOLO
+import sys
+from pathlib import Path
+
+# Добавляем корневую директорию проекта в sys.path
+ROOT_DIR = Path(__file__).parent.parent
+sys.path.insert(0, str(ROOT_DIR))
+from file_paths import MODEL_CACHE_DIR, FILE_ID_ACCURATE, FILE_ID_FAST
 
 
 def apply_clahe_lab(image, clip_limit=3.0, tile_grid_size=(8, 8)):
@@ -24,9 +27,6 @@ def apply_clahe_lab(image, clip_limit=3.0, tile_grid_size=(8, 8)):
 
 def load_model(model_type):
     # TODO вынести в константы
-    MODEL_CACHE_DIR = "models"
-    FILE_ID_ACCURATE = "12eOar13U92TJjyimcVoPopD9t5489hJ9"
-    FILE_ID_FAST = "17vfM5k38wNlo3vFdkF1FMccdXtzAV8e-"
     os.makedirs(MODEL_CACHE_DIR, exist_ok=True)
     if model_type == "точная":
         model_path = os.path.join(MODEL_CACHE_DIR, "accurate.pt")
