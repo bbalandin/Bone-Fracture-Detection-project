@@ -8,13 +8,19 @@ import os
 from backend.model import apply_clahe_lab, detect_fracture
 from file_paths import css_files, IMAGE_ICON, BASE_EXAMPLE_DIR
 
-fracture_classes = ['elbow positive', 'fingers positive', 'forearm fracture', 'humerus', 'shoulder fracture']
-MODEL_TYPE = 'быстрая'
+fracture_classes = [
+    "elbow positive",
+    "fingers positive",
+    "forearm fracture",
+    "humerus",
+    "shoulder fracture",
+]
+MODEL_TYPE = "быстрая"
 
 
 def load_css(file_path):
     """Загрузка CSS из файла"""
-    with open(file_path, 'r', encoding='utf-8') as f:
+    with open(file_path, "r", encoding="utf-8") as f:
         return f.read()
 
 
@@ -40,17 +46,20 @@ def navigation_menu():
     # Внедрение CSS
     inject_custom_css()
 
-    if 'current_page' not in st.session_state:
-        st.session_state.current_page = 'Главная'
+    if "current_page" not in st.session_state:
+        st.session_state.current_page = "Главная"
 
     with st.sidebar:
         # Логотип и название
-        st.markdown("""
+        st.markdown(
+            """
         <div style='text-align: center; padding: 20px 0;'>
             <h2 style='color: #14b8a6; margin: 0;'>Детекция переломов</h2>
             <p style='color: #64748b; font-size: 12px; margin-top: 8px;'>Анализ рентгеновских снимков</p>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
         st.markdown("---")
 
@@ -59,22 +68,22 @@ def navigation_menu():
         col1, col2, col3 = st.columns(3)
         with col1:
             if st.button("Главная страница"):
-                st.session_state.current_page = 'Главная'
+                st.session_state.current_page = "Главная"
         with col2:
             if st.button("Подробная информация"):
-                st.session_state.current_page = 'Подробная информация'
+                st.session_state.current_page = "Подробная информация"
         with col3:
             if st.button("Примеры переломов"):
-                st.session_state.current_page = 'Примеры переломов'
+                st.session_state.current_page = "Примеры переломов"
 
         st.markdown("---")
 
     # Отображение контента в зависимости от выбранной страницы
-    if st.session_state.current_page == 'Главная':
+    if st.session_state.current_page == "Главная":
         show_main_page()
-    elif st.session_state.current_page == 'Подробная информация':
+    elif st.session_state.current_page == "Подробная информация":
         show_info_page()
-    elif st.session_state.current_page == 'Примеры переломов':
+    elif st.session_state.current_page == "Примеры переломов":
         show_examples_page()
 
 
@@ -84,7 +93,7 @@ def uploading_detecting():
     uploaded_file = st.file_uploader(
         "Перетащите файл сюда или нажмите для выбора",
         type=["jpg", "jpeg", "png"],
-        help="Поддерживаемые форматы: JPG, JPEG, PNG • Макс. размер: 200MB"
+        help="Поддерживаемые форматы: JPG, JPEG, PNG • Макс. размер: 200MB",
     )
 
     if uploaded_file is not None:
@@ -92,7 +101,9 @@ def uploading_detecting():
         col1, col2 = st.columns(2)
         with col1:
             st.markdown("#### Оригинал")
-            st.image(uploaded_file, caption="Загруженный снимок", use_container_width=True)
+            st.image(
+                uploaded_file, caption="Загруженный снимок", use_container_width=True
+            )
 
         if st.button("Запустить анализ", use_container_width=True):
             with st.spinner("Анализ снимка..."):
@@ -103,10 +114,14 @@ def uploading_detecting():
                 detected_image_bgr, fractures = detect_fracture(clahe_image, MODEL_TYPE)
                 detected_image_rgb = detected_image_bgr[:, :, ::-1]
                 result_image = Image.fromarray(detected_image_rgb)
-            
+
             with col2:
                 st.markdown("#### Результат детекции")
-                st.image(result_image, caption="С обнаруженными переломами", use_container_width=True)
+                st.image(
+                    result_image,
+                    caption="С обнаруженными переломами",
+                    use_container_width=True,
+                )
 
             if not fractures:
                 st.success("Поздравляем! На Вашем снимке нет перелома!")
@@ -118,7 +133,8 @@ def uploading_detecting():
                     confidence = fracture[0]
                     class_name = fracture_classes[int(fracture[1])]
 
-                    st.markdown(f"""
+                    st.markdown(
+                        f"""
                     <div class='fracture-result'>
                         <div style='display: flex; justify-content: space-between; align-items: center;'>
                             <div>
@@ -131,22 +147,28 @@ def uploading_detecting():
                             </div>
                         </div>
                     </div>
-                    """, unsafe_allow_html=True)
+                    """,
+                        unsafe_allow_html=True,
+                    )
 
 
 def show_main_page():
     # Заголовок с медицинским акцентом
     global MODEL_TYPE
-    st.markdown("""
+    st.markdown(
+        """
     <div class='medical-header'>
         <h1>Детекция переломов</h1>
         <p style='color: #94a3b8; font-size: 16px; margin-top: 12px;'>
             Система для анализа рентгеновских снимков на основе YOLO
         </p>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
-    st.markdown("""
+    st.markdown(
+        """
     <div class='info-card'>
         <p style='color: #cbd5e1; font-size: 15px; line-height: 1.7; margin: 0;'>
             Загрузите рентгеновский снимок для анализа на наличие переломов.
@@ -155,7 +177,9 @@ def show_main_page():
             для улучшения контрастности и детализации.
         </p>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
     st.markdown("---")
 
@@ -164,10 +188,11 @@ def show_main_page():
 
     # Инициализация состояния
 
-    if 'selected_model' not in st.session_state:
+    if "selected_model" not in st.session_state:
         st.session_state.selected_model = "быстрая"
 
-    st.markdown("""
+    st.markdown(
+        """
         <style>
             /* Увеличиваем кнопки до размера карточек */
             button[key="fast_btn"], button[key="slow_btn"] {
@@ -177,7 +202,9 @@ def show_main_page():
                 margin: 0 !important;
             }
         </style>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
     col1, col2 = st.columns(2)
 
@@ -191,7 +218,8 @@ def show_main_page():
             st.session_state.selected_model = "быстрая"
             st.rerun()
         # Карточка с отрицательным margin поверх кнопки
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div style='
             background: {bg_color};
             border: 3px solid {border_color};
@@ -205,7 +233,9 @@ def show_main_page():
                 Быстрая модель (YOLO11n-obb с CLAHE)
             </div>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
     with col2:
         is_selected = st.session_state.selected_model == "точная"
@@ -218,7 +248,8 @@ def show_main_page():
             st.rerun()
 
         # Карточка с отрицательным margin поверх кнопки
-        st.markdown(f"""
+        st.markdown(
+            f"""
         <div style='
             background: {bg_color};
             border: 3px solid {border_color};
@@ -232,7 +263,9 @@ def show_main_page():
                 Точная модель - (YOLO11m-obb с CLAHE)
             </div>
         </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
     st.write(f"Выбрана: {st.session_state.selected_model} модель")
     st.markdown("---")
@@ -241,15 +274,19 @@ def show_main_page():
 
 
 def show_info_page():
-    st.markdown("""
+    st.markdown(
+        """
     <div class='medical-header'>
         <h1>Подробная информация</h1>
         <p style='color: #94a3b8; font-size: 16px; margin-top: 12px;'>
             Описание всей системы
         </p>
     </div>
-    """, unsafe_allow_html=True)
-    st.markdown("""
+    """,
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        """
     <div class='info-card'>
         <p style='color: #cbd5e1; font-size: 15px; line-height: 1.7; margin: 0;'>
             В данном приложении используются две модели - YOLO11m-obb с CLAHE и YOLO11n-obb с CLAHE.
@@ -257,9 +294,12 @@ def show_info_page():
             Качество у них во многом схожее, но первая модель лучше детектирует elbow positive переломы - переломы локтей
         </p>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 
-    st.markdown("""
+    st.markdown(
+        """
     <div class='info-card'>
         <p style='color: #cbd5e1; font-size: 15px; line-height: 1.7; margin: 0;'>
             Ниже показаны все классы переломов.
@@ -267,31 +307,44 @@ def show_info_page():
             в достаточном для наглядности количестве
         </p>
     </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
     all_classes = fracture_classes.copy()
     all_classes.extend(["humerus fracture", "wrist positive"])
-    fracture_translation = ["перелом локтя", "перелом пальцев", "перелом предплечья", 'плечевая кость', 'перелом плеча', 'перелом плечевой кости', 'перелом запястья']
+    fracture_translation = [
+        "перелом локтя",
+        "перелом пальцев",
+        "перелом предплечья",
+        "плечевая кость",
+        "перелом плеча",
+        "перелом плечевой кости",
+        "перелом запястья",
+    ]
     for i, class_name in enumerate(all_classes):
-        st.markdown(f"""
+        st.markdown(
+            f"""
                 <div class='fracture-result'>
                 <strong style='color: #14b8a6;'>{i + 1}.</strong> {class_name} - {fracture_translation[i]}
                 </div>
-        """, unsafe_allow_html=True)
+        """,
+            unsafe_allow_html=True,
+        )
 
 
 def show_examples_page():
-    st.markdown("""
+    st.markdown(
+        """
     <div class='medical-header'>
         <h1>Примеры детекции переломов на test выборке</h1>
         <p style='color: #94a3b8; font-size: 16px; margin-top: 12px;'>
             Выберите класс переломов
         </p>
     </div>
-    """, unsafe_allow_html=True)
-    type_of_fracture = st.selectbox(
-        "Классы переломов",
-        fracture_classes
+    """,
+        unsafe_allow_html=True,
     )
+    type_of_fracture = st.selectbox("Классы переломов", fracture_classes)
     dir_gt = f"{type_of_fracture}_gt"
     dir_pred = f"{type_of_fracture}_pred"
     DIR_EXAMPLES_GT = f"{BASE_EXAMPLE_DIR}/{dir_gt}"
@@ -301,10 +354,15 @@ def show_examples_page():
         image_pred = Image.open(os.path.join(DIR_EXAMPLES_PRED, file))
         image_gt = Image.open(os.path.join(DIR_EXAMPLES_GT, file))
         with col1:
-            st.image(image_pred, caption="Предсказанный перелом", use_container_width=True)
+            st.image(
+                image_pred, caption="Предсказанный перелом", use_container_width=True
+            )
         with col2:
-            st.image(image_gt, caption="Реальный перелом(выделен при разметке)",
-                      use_container_width=True)
+            st.image(
+                image_gt,
+                caption="Реальный перелом(выделен при разметке)",
+                use_container_width=True,
+            )
 
 
 if __name__ == "__main__":

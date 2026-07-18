@@ -1,4 +1,3 @@
-/* ===== RADIO BUTTONS ===== */
 .stRadio>div {
     background: #1e293b;
     border-radius: 12px;
@@ -12,7 +11,7 @@
     font-size: 16px;
 }
 
-/* ===== FILE UPLOADER ===== */
+
 .stFileUploader {
     background: #1e293b;
     border: 2px dashed #475569;
@@ -31,7 +30,7 @@
     font-size: 14px;
 }
 
-/* ===== SUCCESS/WARNING/ERROR BOXES ===== */
+
 .stSuccess {
     background: rgba(20, 184, 166, 0.1);
     border-left: 4px solid #14b8a6;
@@ -63,7 +62,7 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-/* ===== METRICS ===== */
+
 .stMetric {
     background: #1e293b;
     border-radius: 8px;
@@ -80,12 +79,12 @@
     font-weight: 700;
 }
 
-/* ===== PROGRESS BAR ===== */
+
 .stProgress>div>div>div>div {
     background: linear-gradient(90deg, #14b8a6 0%, #2dd4bf 100%);
 }
 
-/* ===== CUSTOM CLASSES ===== */
+
 .medical-header {
     background: linear-gradient(135deg, #1e293b 0%, #0f1419 100%);
     padding: 30px;
@@ -117,13 +116,13 @@
     border-radius: 8px;
 }
 
-/* ===== LABELS ===== */
+
 label {
     color: #94a3b8 !important;
     font-weight: 500;
 }
 
-/* ===== SPINNER ===== */
+
 .stSpinner>div>div {
     border-top-color: #14b8a6 !important;
 }

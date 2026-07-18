@@ -1,10 +1,9 @@
-/* ===== ОСНОВНАЯ ТЕМА ===== */
 .stApp {
     background: linear-gradient(135deg, #0f1419 0%, #1a2332 100%);
     color: #e2e8f0;
 }
 
-/* Заголовки */
+
 h1, h2, h3, h4, h5, h6 {
     color: #f1f5f9 !important;
     font-weight: 600;
@@ -18,13 +17,12 @@ h1 {
     padding-bottom: 0.5rem;
 }
 
-/* Текст */
 .stMarkdown, .stText {
     color: #cbd5e1;
     line-height: 1.7;
 }
 
-/* ===== КНОПКИ ===== */
+
 .stButton>button {
     background: linear-gradient(135deg, #14b8a6 0%, #2dd4bf 100%);
     color: #0f1419;
@@ -43,13 +41,13 @@ h1 {
     box-shadow: 0 4px 16px rgba(20, 184, 166, 0.5);
 }
 
-/* ===== DIVIDERS ===== */
+
 hr {
     border-color: #334155;
     margin: 2rem 0;
 }
 
-/* ===== SCROLLBAR ===== */
+
 ::-webkit-scrollbar {
     width: 10px;
     height: 10px;
@@ -69,7 +67,7 @@ hr {
 }
 
 
-/* ===== HIDE STREAMLIT BRANDING ===== */
+
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
 header {visibility: hidden;}

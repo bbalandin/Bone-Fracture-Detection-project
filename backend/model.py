@@ -26,7 +26,6 @@ def apply_clahe_lab(image, clip_limit=3.0, tile_grid_size=(8, 8)):
 
 
 def load_model(model_type):
-    # TODO вынести в константы
     os.makedirs(MODEL_CACHE_DIR, exist_ok=True)
     if model_type == "точная":
         model_path = os.path.join(MODEL_CACHE_DIR, "accurate.pt")
@@ -44,28 +43,27 @@ def load_model(model_type):
     else:
         st.success(f"Модель скачана!")
     return YOLO(model_path)
-    # TODO сделать скачивание модели из google диска
 
 
 def detect_fracture(image, model_type, is_obb=True):  # добавить для obb
-    # TODO вынести все пути в константы
-    # MODEL_TYPE_FILE = os.path.normpath(MODEL_TYPE_FILE)
     model = load_model(model_type)
     bbox_color = (204, 204, 0)  # цвет нашего bounding box'
     # инференс на данном изображении
     results = model(image, conf=0.5, iou=0.4)  # list of Results objects
-    # TODO пока not is_obb работает некорректно
-    if not is_obb:
-        for result in results:
-            boxes = result.boxes  # Bounding boxes
-            if boxes:
-                for box in boxes:  # переделать на oriented boundin box'ы, так как у них качество лучше
-                    x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
-                    # 2. Draw the rectangle
-                    cv2.rectangle(image, (x1, y1), (x2, y2), bbox_color,
-                                  thickness=2)
-        # Добавить здесь функционал с нахождением перелома
-    else:
+    # TODO пока not is_obb работает некорректно(это задел на будущее, если захочется использовать модель
+    # в обычном формате YOLO, а не obb,
+    # но так как на данный момент у нас обе модели работают с obb, этот код закомментирован)
+    # if not is_obb:
+    #     for result in results:
+    #         boxes = result.boxes  # Bounding boxes
+    #         if boxes:
+    #             for box in boxes:  # переделать на oriented boundin box'ы, так как у них качество лучше
+    #                 x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
+    #                 # 2. Draw the rectangle
+    #                 cv2.rectangle(image, (x1, y1), (x2, y2), bbox_color,
+    #                               thickness=2)
+    # Добавить здесь функционал с нахождением перелома
+    if is_obb:
         fractures = []
         for result in results:  # используем формат obb для отрисовки bounding box'ов
             obbs = result.obb
@@ -75,6 +73,7 @@ def detect_fracture(image, model_type, is_obb=True):  # добавить для 
                     # получаем 4 координаты
                     points = obb.xyxyxyxy[0].numpy().astype(np.int64)
                     # отрисовываем bounding box
-                    cv2.polylines(image, [points], isClosed=True,
-                                  color=bbox_color, thickness=2)
+                    cv2.polylines(
+                        image, [points], isClosed=True, color=bbox_color, thickness=2
+                    )
     return image, fractures

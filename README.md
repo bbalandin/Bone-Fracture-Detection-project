@@ -141,16 +141,7 @@ source .venv\Scripts\activate
 # Установите зависимости
 pip install -r requirements.txt
 
-# для запуска сначала нужно запустить фронтенд
-cd frontend
-streamlit run app.py
-
-cd .. # переходим в корневую директорию
-# и в новом окне запустить backend часть
-cd backend
-uvicorn app_backend:app --reload
-
-# или можно просто запустить for_deploy.py 
-# вместо отдельного запуска frontend и backend
+# можно отдельно запустить фронтенд и backend
+# или можно сразу запустить один файл, который # использовался при деплое на Streamlit Cloud
 streamlit run for_deploy.py
 ```
